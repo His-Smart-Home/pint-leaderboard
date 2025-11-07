@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Pint Challenge</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f9f9f9;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 2rem;
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .pint-number {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #2c7be5;
+      margin: 1rem 0;
+    }
+
+    .subtext {
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
+      color: #555;
+    }
+
+    .name {
+      font-size: 1.8rem;
+      font-weight: 600;
+      margin: 1rem 0 0.5rem;
+    }
+
+    .photo {
+      width: 100%;
+      border-radius: 0.5rem;
+      object-fit: cover;
+      margin-top: 1rem;
+      max-height: 400px;
+    }
+
+    .leaderboard {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .leaderboard h2 {
+      margin-bottom: 1rem;
+      font-size: 1.5rem;
+      text-align: center;
+    }
+
+    .leaderboard ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .leaderboard li {
+      padding: 0.5rem;
+      font-size: 1.1rem;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .leaderboard li:last-child {
+      border-bottom: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>The Pint Challenge</h1>
+    <p class="subtext">We are on...</p>
+    <div class="pint-number" id="pint-number">#????</div>
+
+    <p class="subtext">Pints needed a day:<br><span id="pints-per-day">calculating...</span></p>
+
+    <p class="subtext">Last pint received:</p>
+    <div class="name" id="last-sender">NAME</div>
+
+    <img src="" alt="Latest Pint" id="last-photo" class="photo" style="display:none"/>
+  </div>
+
+  <div class="leaderboard">
+    <h2>Leaderboard</h2>
+    <ul id="leaderboard-list"></ul>
+  </div>
+
+  <script>
+    const csvUrl = "https://pint.hsho.me/data.csv";
+    const TARGET_PINT = 100000;
+    const START_DATE = new Date("2023-01-01");
+
+    async function fetchAndParseCSV() {
+      const res = await fetch(csvUrl);
+      const csv = await res.text();
+      const lines = csv.trim().split('\n');
+      const headers = lines[0].split(',');
+
+      const entries = lines.slice(1).map(line => {
+        const cols = line.split(',');
+        return {
+          timestamp: cols[0],
+          sender: cols[1],
+          number: parseInt(cols[2]),
+          photo: cols[3]
+        };
+      });
+
+      return entries;
+    }
+
+    function buildLeaderboard(data) {
+      const counts = {};
+      data.forEach(entry => {
+        counts[entry.sender] = (counts[entry.sender] || 0) + 1;
+      });
+
+      return Object.entries(counts)
+        .map(([name, count]) => ({ name, count }))
+        .sort((a, b) => b.count - a.count);
+    }
+
+    function updatePage(data) {
+      if (!data.length) return;
+
+      const last = data[data.length - 1];
+      const total = data.length;
+
+      const daysElapsed = Math.floor((new Date() - START_DATE) / (1000 * 60 * 60 * 24));
+      const pintsPerDay = ((TARGET_PINT - total) / (365 - daysElapsed)).toFixed(2);
+
+      document.getElementById("pint-number").textContent = `#${total}`;
+      document.getElementById("pints-per-day").textContent = pintsPerDay;
+      document.getElementById("last-sender").textContent = last.sender;
+
+      const img = document.getElementById("last-photo");
+      img.src = `https://pint.hsho.me/media/${last.photo}`;
+      img.style.display = "block";
+
+      const leaderboard = buildLeaderboard(data);
+      const lbList = document.getElementById("leaderboard-list");
+      lbList.innerHTML = leaderboard.map(p => `<li><span>${p.name}</span><span>${p.count}</span></li>`).join('');
+    }
+
+    fetchAndParseCSV().then(updatePage).catch(console.error);
+  </script>
+</body>
+</html>
