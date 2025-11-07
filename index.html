@@ -114,64 +114,72 @@
     <ul id="leaderboard-list"></ul>
   </div>
 
-  <script>
-    const csvUrl = "https://pint.hsho.me/data.csv";
-    const TARGET_PINT = 100000;
-    const START_DATE = new Date("2023-01-01");
+<script>
+  const csvUrl = "https://pint.hsho.me/data.csv";
+  const TARGET_PINT = 100000;
+  const END_DATE = new Date("2025-12-25");
+  const now = new Date();
 
-    async function fetchAndParseCSV() {
-      const res = await fetch(csvUrl);
-      const csv = await res.text();
-      const lines = csv.trim().split('\n');
-      const headers = lines[0].split(',');
+  async function fetchAndParseCSV() {
+    const res = await fetch(csvUrl);
+    const csv = await res.text();
+    const lines = csv.trim().split('\n');
+    const headers = lines[0].split(',');
 
-      const entries = lines.slice(1).map(line => {
-        const cols = line.split(',');
-        return {
-          timestamp: cols[0],
-          sender: cols[1],
-          number: parseInt(cols[2]),
-          photo: cols[3]
-        };
-      });
+    const entries = lines.slice(1).map(line => {
+      const cols = line.split(',');
+      return {
+        timestamp: cols[0],
+        sender: cols[1],
+        number: parseInt(cols[2]),
+        photo: cols[3]
+      };
+    });
 
-      return entries;
-    }
+    return entries;
+  }
 
-    function buildLeaderboard(data) {
-      const counts = {};
-      data.forEach(entry => {
-        counts[entry.sender] = (counts[entry.sender] || 0) + 1;
-      });
+  function buildLeaderboard(data) {
+    const counts = {};
+    data.forEach(entry => {
+      counts[entry.sender] = (counts[entry.sender] || 0) + 1;
+    });
 
-      return Object.entries(counts)
-        .map(([name, count]) => ({ name, count }))
-        .sort((a, b) => b.count - a.count);
-    }
+    return Object.entries(counts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10); // 👈 Only top 10
+  }
 
-    function updatePage(data) {
-      if (!data.length) return;
+  function updatePage(data) {
+    if (!data.length) return;
 
-      const last = data[data.length - 1];
-      const total = data.length;
+    const last = data[data.length - 1];
+    const currentPint = last.number || data.length;
+    const uniquePeople = new Set(data.map(d => d.sender)).size;
 
-      const daysElapsed = Math.floor((new Date() - START_DATE) / (1000 * 60 * 60 * 24));
-      const pintsPerDay = ((TARGET_PINT - total) / (365 - daysElapsed)).toFixed(2);
+    const daysRemaining = Math.max(1, Math.floor((END_DATE - now) / (1000 * 60 * 60 * 24)));
+    const pintsRemaining = Math.max(0, TARGET_PINT - currentPint);
+    const pintsPerDay = (pintsRemaining / (uniquePeople * daysRemaining)).toFixed(2);
 
-      document.getElementById("pint-number").textContent = `#${total}`;
-      document.getElementById("pints-per-day").textContent = pintsPerDay;
-      document.getElementById("last-sender").textContent = last.sender;
+    document.getElementById("pint-number").textContent = `#${currentPint}`;
+    document.getElementById("pints-per-day").textContent = pintsPerDay;
+    document.getElementById("last-sender").textContent = last.sender;
 
-      const img = document.getElementById("last-photo");
-      img.src = `https://pint.hsho.me/media/${last.photo}`;
-      img.style.display = "block";
+    const img = document.getElementById("last-photo");
+    img.src = `https://pint.hsho.me/media/${last.photo}`;
+    img.style.display = "block";
 
-      const leaderboard = buildLeaderboard(data);
-      const lbList = document.getElementById("leaderboard-list");
-      lbList.innerHTML = leaderboard.map(p => `<li><span>${p.name}</span><span>${p.count}</span></li>`).join('');
-    }
+    const leaderboard = buildLeaderboard(data);
+    const lbList = document.getElementById("leaderboard-list");
+    lbList.innerHTML = leaderboard.map((p, i) => 
+      `<li><span>${i + 1}. ${p.name}</span><span>${p.count}</span></li>`
+    ).join('');
+  }
 
-    fetchAndParseCSV().then(updatePage).catch(console.error);
-  </script>
+  fetchAndParseCSV().then(updatePage).catch(console.error);
+</script>
+
+
 </body>
 </html>
