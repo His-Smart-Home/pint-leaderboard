@@ -156,7 +156,7 @@
 
     const last = data[data.length - 1];
     const currentPint = last.number || data.length;
-    const uniquePeople = new Set(data.map(d => d.sender)).size;
+    const uniquePeople = 1023; // Hardcoded unique participant count
 
     const daysRemaining = Math.max(1, Math.floor((END_DATE - now) / (1000 * 60 * 60 * 24)));
     const pintsRemaining = Math.max(0, TARGET_PINT - currentPint);
