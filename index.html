@@ -28,9 +28,29 @@
       margin-bottom: 2rem;
     }
 
+    .leaderboard {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
     h1 {
       font-size: 2rem;
       margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin-bottom: .75rem;
     }
 
     .pint-number {
@@ -60,14 +80,6 @@
       max-height: 400px;
     }
 
-    .leaderboard {
-      max-width: 600px;
-      width: 100%;
-      background: white;
-      padding: 1.5rem;
-      border-radius: 1rem;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
 
     .leaderboard h2 {
       margin-bottom: 1rem;
@@ -98,12 +110,13 @@
 
   <div class="card">
     <h1>The Pint Challenge</h1>
+    <p class="subtext">You have been specially selected as challengers. Together, as a community, we will hit 100,000 beers by Christmas.</p>
     <p class="subtext">We are on...</p>
     <div class="pint-number" id="pint-number">#????</div>
 
     <p class="subtext">Pints needed a day:<br><span id="pints-per-day">calculating...</span></p>
 
-    <p class="subtext">Last pint received:</p>
+    <p class="subtext">Last pint uploaded to site:</p>
     <div class="name" id="last-sender">NAME</div>
 
     <img src="" alt="Latest Pint" id="last-photo" class="photo" style="display:none"/>
@@ -112,6 +125,12 @@
   <div class="leaderboard">
     <h2>Leaderboard</h2>
     <ul id="leaderboard-list"></ul>
+  </div>
+
+  <div class="card">
+    <h2>Website ran by Nathan @ HisSmartHome</h2>
+    <h3>Data is uploaded as often as I can, WhatsApp don't provide a programmatic way to grab group chat data.</h3>
+    <h3>Are you a software dev? Looking for some extra money? <a href="https://hissmarthome.uk">Join us.</a></h3>
   </div>
 
 <script>
