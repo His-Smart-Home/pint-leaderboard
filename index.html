@@ -99,10 +99,39 @@
       border-bottom: 1px solid #eee;
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
     }
 
     .leaderboard li:last-child {
       border-bottom: none;
+    }
+
+    .lb-left {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .lb-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .lb-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.25rem;
+      font-size: 0.95rem;
+    }
+
+    .lb-ppd {
+      color: #555;
     }
   </style>
 </head>
@@ -159,15 +188,40 @@
   }
 
   function buildLeaderboard(data) {
-    const counts = {};
+    const stats = new Map();
+
     data.forEach(entry => {
-      counts[entry.sender] = (counts[entry.sender] || 0) + 1;
+      const ts = new Date(entry.timestamp);
+      const current = stats.get(entry.sender) || { count: 0, first: null, last: null };
+
+      current.count += 1;
+
+      if (!isNaN(ts)) {
+        current.first = current.first ? Math.min(current.first, ts) : ts;
+        current.last = current.last ? Math.max(current.last, ts) : ts;
+      }
+
+      stats.set(entry.sender, current);
     });
 
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+
+    return Array.from(stats.entries())
+      .map(([name, { count, first, last }]) => {
+        const start = first ? (first instanceof Date ? first.getTime() : first) : null;
+        const end = last ? (last instanceof Date ? last.getTime() : last) : start;
+        const daysActive = start && end
+          ? Math.max(1, Math.round((end - start) / MS_PER_DAY) + 1)
+          : 1;
+
+        return {
+          name,
+          count,
+          ppd: count / daysActive
+        };
+      })
       .sort((a, b) => b.count - a.count)
-      .slice(0, 15); // 👈 Only top 10
+      .slice(0, 15); // 👈 Only top 15
   }
 
   function updatePage(data) {
@@ -191,8 +245,14 @@
 
     const leaderboard = buildLeaderboard(data);
     const lbList = document.getElementById("leaderboard-list");
-    lbList.innerHTML = leaderboard.map((p, i) => 
-      `<li><span>${i + 1}. ${p.name}</span><span>${p.count}🍻</span></li>`
+    lbList.innerHTML = leaderboard.map((p, i) =>
+      `<li>
+        <div class="lb-left"><span>${i + 1}.</span><span class="lb-name">${p.name}</span></div>
+        <div class="lb-right">
+          <span class="lb-ppd">${p.ppd.toFixed(2)} PPD</span>
+          <span class="lb-count">${p.count}🍻</span>
+        </div>
+      </li>`
     ).join('');
   }
 
